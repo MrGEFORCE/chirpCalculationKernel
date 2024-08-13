@@ -1,12 +1,19 @@
 # FMCW chirp calculation kernel
 
-- supports multiple programming languages for calculating FMCW radar chirp parameters.
-- it is designed as a kernel, meant to be integrated into other software that may have a GUI.
-- in addition to performing radar performance calculations, the library also detects and reports invalid settings.
-- for high-level languages, this library provides a standard .cfg file API to describe parameters, making it easy to load and save configurations between different languages.
-- still in early stage of development...
+- Supports multiple programming languages for calculating FMCW radar chirp parameters.
+- It is designed as a kernel, meant to be integrated into other software that may have a GUI.
+- In addition to performing radar performance calculations, the library also detects and reports invalid settings.
+- For high-level languages, this library provides a standard .cfg file API to describe parameters, making it easy to load and save configurations between different languages.
+- Still in early stage of development...
 
 ---
+
+### Prerequisites
+
+You should be familiar with the basic theory of FMCW radar signal processing, otherwise the code is very hard to understand. Except for this, almost nothing else need to know because this project just do some simple calculation, saving and loading.
+
+---
+
 ### Environments
 
 1. for python:
@@ -18,38 +25,51 @@
 
 - builder: cmake 3.28.
 - toolchains:
-  - MSVC (pending validation)
-  - MinGW (recommended, confirmed)
-  - clang & llvm (pending validation)
-  - GNU (for linux)
+    - MSVC (pending validation)
+    - MinGW (recommended, confirmed)
+    - clang & llvm (pending validation)
+    - GNU (for linux)
 - IDE: CLion or VsCode (recommended)
 
 3. for matlab: to do
 
 4. for GoLang: to do
 
+---
+
+### Instructions and Example
+
+See the file named "example.*" for every language.
 
 ---
 
 ### Attentions
 
-0. general
-- the .cfg description file is case-sensitive.
+0. General
 
-1. for python:
-- the decorator "dataclass" is used. it's a newly added feature in python 3.7.
-- The description of data type in class is only a hint to the IDE, and the actual assignment is likely to change its default type. Because the program has made a clear distinction between float and int, the user needs to pay special attention to the writing of assignment when using it. Among them, the value represented by Scientific notation will be automatically stored in float format, and the value represented by non-Scientific notation needs to be explicitly followed by a decimal point if it is identified as float.
+- The .cfg description file is case-sensitive.
 
-2. for c & c++:
+1. For python:
+
+- The decorator "dataclass" is used. it's a newly added feature in python 3.7.
+- The description of data type in class is only a hint to the IDE, and the actual assignment is likely to change its default type. Because the program has made a clear distinction between
+  float and int, the user needs to pay special attention to the writing of assignment when using it. Among them, the value represented by Scientific notation will be automatically stored in
+  float format, and the value represented by non-Scientific notation needs to be explicitly followed by a decimal point if it is identified as float.
+
+2. For c & c++:
+
 - c version DO NOT provide .cfg API, because it's mainly targeting for embedded development. The development on computer should always use c++ version.
-- can be exported as a lib, either in static or dynamic, but need to change CMakeLists.
+- Can be exported as a lib, either in static or dynamic, but need to change CMakeLists. The profiles for executable, static library and dynamic library are all in the CMakeLists. When using, uncomment the chosen one and reload CMakeLists (don't forget this).
+- c version still in progress.
 
 ---
+
 ### Acknowledgement and Reference
 
-[c++ lib for parse .cfg file](https://blog.csdn.net/baidu_31872269/article/details/82766200)
+[c++ lib for parsing .cfg file](https://blog.csdn.net/baidu_31872269/article/details/82766200)
 
 ---
+
 ### Author
 
 Mr_GEFORCE
