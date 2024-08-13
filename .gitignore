@@ -1,0 +1,16 @@
+# generic
+.idea
+venv
+
+.vscode
+build
+deploy
+
+*.cfg
+
+# for python
+__pycache__
+*.pyproject.user
+
+# for c & cpp
+cmake-build-*
