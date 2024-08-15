@@ -6,6 +6,8 @@ venv
 .cache
 build
 deploy
+.vs
+out
 
 *.cfg
 

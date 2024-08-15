@@ -25,7 +25,7 @@ You should be familiar with the basic theory of FMCW radar signal processing, ot
 
 - builder: cmake 3.28.
 - toolchains:
-    - MSVC (pending validation)
+    - MSVC (confirmed)
     - MinGW (recommended, confirmed)
     - clang & llvm (Apple, confirmed)
     - GNU (for linux)
