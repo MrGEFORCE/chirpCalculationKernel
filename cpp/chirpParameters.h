@@ -49,19 +49,24 @@ namespace chirpParameters {
 #define STR_KEY_dopplerBias_dB "cfarDopplerBias_dB"
 #define CFG_CFAR_LINES (8U)
 
-    enum {
+    enum dataType_e {
         typeInt = 0,
         typeFloat,
         typeBool
-    } dataType_e;
+    };
 
-    enum {
+    enum slopePriority_e {
+        spSlopeFirst = 0,
+        spBandwidthFirst,
+    };
+
+    enum CfarParameterDataInt_e {
         rangeGuardIdx = 0,
         rangeReferenceIdx,
         dopplerGuardIdx,
         dopplerReferenceIdx,
         CfarParameterDataIntCount
-    } CfarParameterDataInt_e;
+    };
 
     typedef struct {
         int rangeGuard;
@@ -75,13 +80,13 @@ namespace chirpParameters {
         CfarParameterDataInt_t t;
     };
 
-    enum {
+    enum CfarParameterDataFloat_e {
         rangeAlphaIdx = 0,
         rangeBias_dBIdx,
         dopplerAlphaIdx,
         dopplerBias_dBIdx,
         CfarParameterDataFloatCount
-    } CfarParameterDataFloat_e;
+    };
 
     typedef struct {
         float rangeAlpha;
@@ -95,10 +100,10 @@ namespace chirpParameters {
         CfarParameterDataFloat_t t;
     };
 
-    enum {
+    enum CfarParameterDataBool_e {
         enabledIdx = 0,
         CfarParameterDataBoolCount
-    } CfarParameterDataBool_e;
+    };
 
     typedef struct {
         bool enabled;
@@ -115,7 +120,7 @@ namespace chirpParameters {
         CfarParameterDataBool_u boolData;
     } CfarParameterData_t;
 
-    enum {
+    enum ChirpParameterDataInt_e {
         ADCPointsIdx = 0,
         chirpLoopsIdx,
         antTDMIdx,
@@ -131,7 +136,7 @@ namespace chirpParameters {
         maxRangeFFTSizeIdx,
         maxDopplerFFTSizeIdx,
         ChirpParameterDataIntCount
-    } ChirpParameterDataInt_e;
+    };
 
     typedef struct {
         int ADCPoints;
@@ -155,7 +160,7 @@ namespace chirpParameters {
         ChirpParameterDataInt_t t;
     };
 
-    enum {
+    enum ChirpParameterDataFloat_e {
         startFrequency_MHzIdx = 0,
         bandWidth_MHzIdx,
         idleTime_usIdx,
@@ -185,7 +190,7 @@ namespace chirpParameters {
         MaxIF_kHzIdx,
         f32radarCube_kBIdx,
         ChirpParameterDataFloatCount
-    } ChirpParameterDataFloat_e;
+    };
 
     typedef struct {
         float startFrequency_MHz;
@@ -224,11 +229,11 @@ namespace chirpParameters {
         ChirpParameterDataFloat_t t;
     };
 
-    enum {
+    enum ChirpParameterDataBool_e {
         iqSampleIdx = 0,
         staticClutterRemovalIdx,
         ChirpParameterDataBoolCount
-    } ChirpParameterDataBool_e;
+    };
 
     typedef struct {
         bool iqSample;
@@ -258,6 +263,7 @@ namespace chirpParameters {
         config::RrConfig configParser;
 
         bool computeErrorFlag;
+        slopePriority_e slopePriority;
 
         ChirpParameterHandler();
 

@@ -48,6 +48,7 @@ See the file named "example.*" for every language.
 0. General
 
 - The .cfg description file is case-sensitive.
+- There is a certain relationship between bandwidth, ramp time, and slope. Users can choose slope priority or bandwidth priority. The default setting of the program is bandwidth priority, which calculates the slope given the bandwidth.
 
 1. For python:
 

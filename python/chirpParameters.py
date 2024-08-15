@@ -4,6 +4,9 @@ from dataclasses import dataclass
 CP_ERR = False
 CP_OK = True
 
+SP_SLOPE_FIRST = 0
+SP_BANDWIDTH_FIRST = 1
+
 
 # for save and load .cfg file
 @dataclass
@@ -120,6 +123,7 @@ class ChirpParameterHandler(ChirpParameterData):
         self.errFlag = CP_OK
         self.config = configparser.ConfigParser()
         self.config.optionxform = str
+        self.slopePriority = SP_SLOPE_FIRST
 
     @staticmethod
     def is2power(x: int) -> bool:
@@ -130,10 +134,10 @@ class ChirpParameterHandler(ChirpParameterData):
         self.minChirpLoops = 0
         self.minRangeFFTSize = 0
         self.minDopplerFFTSize = 0
-        self.maxADCPoints = -1  # unlimited
-        self.maxChirpLoops = -1
-        self.maxRangeFFTSize = -1
-        self.maxDopplerFFTSize = -1
+        self.maxADCPoints = 0  # unlimited
+        self.maxChirpLoops = 0
+        self.maxRangeFFTSize = 0
+        self.maxDopplerFFTSize = 0
         self.staticClutterRemoval = True
 
         self.startFrequency_MHz = 77e3  # The expression of Scientific notation will automatically become a floating point number
@@ -156,9 +160,13 @@ class ChirpParameterHandler(ChirpParameterData):
 
     def compute_and_validate(self) -> None:
         self.errFlag = CP_ERR
+        if self.slopePriority == SP_SLOPE_FIRST:
+            self.bandWidth_MHz = self.slope_MHzus * self.rampTime_us
+        elif self.slopePriority == SP_BANDWIDTH_FIRST:
+            self.slope_MHzus = self.bandWidth_MHz / self.rampTime_us
         self.lambdaStart_mm = 3e5 / self.startFrequency_MHz
         self.lambdaCenter_mm = 3e5 / (self.startFrequency_MHz + self.bandWidth_MHz / 2)
-        self.slope_MHzus = self.bandWidth_MHz / self.rampTime_us
+
         self.Tc_us = self.idleTime_us + self.rampTime_us
         self.TcTDM_us = self.Tc_us * self.antTDM
         self.Tf_us = self.TcTDM_us * self.chirpLoops
@@ -187,22 +195,22 @@ class ChirpParameterHandler(ChirpParameterData):
             self.errMsg = "duty cycle larger than 100%"
             return
 
-        if self.maxADCPoints != -1:
+        if self.maxADCPoints != 0:
             if self.ADCPoints > self.maxADCPoints:
                 self.errMsg = "ADC points larger than limit"
                 return
 
-        if self.maxChirpLoops != -1:
+        if self.maxChirpLoops != 0:
             if self.chirpLoops > self.maxChirpLoops:
                 self.errMsg = "chirp loops larger than limit"
                 return
 
-        if self.maxRangeFFTSize != -1:
+        if self.maxRangeFFTSize != 0:
             if self.rangeFFTSize > self.maxRangeFFTSize:
                 self.errMsg = "range FFT size larger than limit"
                 return
 
-        if self.maxDopplerFFTSize != -1:
+        if self.maxDopplerFFTSize != 0:
             if self.dopplerFFTSize > self.maxDopplerFFTSize:
                 self.errMsg = "doppler FFT size larger than limit"
                 return

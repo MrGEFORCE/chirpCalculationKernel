@@ -115,6 +115,7 @@ namespace chirpParameters {
         this->keyStringsCfar[7] = STR_KEY_dopplerBias_dB;
 
         this->computeErrorFlag = CP_OK;
+        this->slopePriority = spBandwidthFirst; // default
     }
 
     void ChirpParameterHandler::set_default() {
@@ -146,14 +147,18 @@ namespace chirpParameters {
     }
 
     void ChirpParameterHandler::compute_and_validate() {
+        if (this->slopePriority == spSlopeFirst) {
+            this->data.floatData.t.bandWidth_MHz = this->data.floatData.t.rampTime_us * this->data.floatData.t.slope_MHzus;
+        } else if (this->slopePriority == spBandwidthFirst) {
+            this->data.floatData.t.slope_MHzus = this->data.floatData.t.bandWidth_MHz / this->data.floatData.t.rampTime_us;
+        }
         this->data.floatData.t.lambdaStart_mm = 3e5f / this->data.floatData.t.startFrequency_MHz;
         this->data.floatData.t.lambdaCenter_mm = 3e5f / (this->data.floatData.t.startFrequency_MHz + this->data.floatData.t.bandWidth_MHz / 2.f);
-        this->data.floatData.t.slope_MHzus = this->data.floatData.t.bandWidth_MHz / this->data.floatData.t.rampTime_us;
         this->data.floatData.t.Tc_us = this->data.floatData.t.idleTime_us + this->data.floatData.t.rampTime_us;
         this->data.floatData.t.TcTDM_us = this->data.floatData.t.Tc_us * (float)this->data.intData.t.antTDM;
         this->data.floatData.t.Tf_us = this->data.floatData.t.TcTDM_us * (float)this->data.intData.t.chirpLoops;
         this->data.floatData.t.dutyCycle_percent = this->data.floatData.t.Tf_us / this->data.floatData.t.periodicity_ms * 1e-1f;
-        this->data.floatData.t.maxADCTime_us = this->data.floatData.t.rampTime_us + this->data.floatData.t.ADCDelay_us;
+        this->data.floatData.t.maxADCTime_us = this->data.floatData.t.rampTime_us - this->data.floatData.t.ADCDelay_us;
         this->data.floatData.t.ADCTime_us = (float)this->data.intData.t.ADCPoints / this->data.floatData.t.sampleRate_ksps * 1e3f;
         this->data.floatData.t.ADCBandWidth_MHz = this->data.floatData.t.slope_MHzus * this->data.floatData.t.ADCTime_us;
         this->data.floatData.t.dMax_m = this->data.floatData.t.sampleRate_ksps * 15e-2f / this->data.floatData.t.slope_MHzus;
@@ -180,28 +185,28 @@ namespace chirpParameters {
             return;
         }
 
-        if (this->data.intData.t.maxADCPoints != -1) {
+        if (this->data.intData.t.maxADCPoints != 0) {
             if (this->data.intData.t.ADCPoints > this->data.intData.t.maxADCPoints) {
                 this->errMsg = "ADC points larger than limit";
                 return;
             }
         }
 
-        if (this->data.intData.t.maxChirpLoops != -1) {
+        if (this->data.intData.t.maxChirpLoops != 0) {
             if (this->data.intData.t.chirpLoops > this->data.intData.t.maxChirpLoops) {
                 this->errMsg = "chirp loops larger than limit";
                 return;
             }
         }
 
-        if (this->data.intData.t.maxRangeFFTSize != -1) {
+        if (this->data.intData.t.maxRangeFFTSize != 0) {
             if (this->data.intData.t.rangeFFTSize > this->data.intData.t.maxRangeFFTSize) {
                 this->errMsg = "range FFT size larger than limit";
                 return;
             }
         }
 
-        if (this->data.intData.t.maxDopplerFFTSize != -1) {
+        if (this->data.intData.t.maxDopplerFFTSize != 0) {
             if (this->data.intData.t.dopplerFFTSize > this->data.intData.t.maxDopplerFFTSize) {
                 this->errMsg = "doppler FFT size larger than limit";
                 return;
@@ -337,6 +342,10 @@ namespace chirpParameters {
                 default:
                     break;
             }
+        }
+        // recalculate bandwidth
+        if (this->slopePriority == spSlopeFirst) {
+            this->data.floatData.t.slope_MHzus = this->data.floatData.t.bandWidth_MHz / this->data.floatData.t.rampTime_us;
         }
         // cfar part
         tempStr = this->configParser.ReadString(STR_SEC_CFAR, STR_KEY_rangeGuard, "");
