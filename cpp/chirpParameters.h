@@ -119,6 +119,7 @@ namespace chirpParameters {
         ADCPointsIdx = 0,
         chirpLoopsIdx,
         antTDMIdx,
+        rxIdx,
         rangeFFTSizeIdx,
         dopplerFFTSizeIdx,
         minADCPointsIdx,
@@ -136,6 +137,7 @@ namespace chirpParameters {
         int ADCPoints;
         int chirpLoops;
         int antTDM;
+        int rx;
         int rangeFFTSize;
         int dopplerFFTSize;
         int minADCPoints;  // opt
@@ -181,6 +183,7 @@ namespace chirpParameters {
         oneResBinIF_kHzIdx,
         oneResComputeBinIF_kHzIdx,
         MaxIF_kHzIdx,
+        f32radarCube_kBIdx,
         ChirpParameterDataFloatCount
     } ChirpParameterDataFloat_e;
 
@@ -212,7 +215,8 @@ namespace chirpParameters {
         float oneMeterIF_kHz;
         float oneResBinIF_kHz;
         float oneResComputeBinIF_kHz;
-        float MaxIF_kHz;
+        float maxIF_kHz;
+        float f32radarCube_kB;
     } ChirpParameterDataFloat_t;
 
     union ChirpParameterDataFloat_u {
@@ -253,11 +257,13 @@ namespace chirpParameters {
         std::unordered_map <std::string, int > strRefIdxMap;
         config::RrConfig configParser;
 
+        bool computeErrorFlag;
+
         ChirpParameterHandler();
 
         void set_default();
 
-        bool compute_and_validate();
+        void compute_and_validate();
 
         void save_cfg(const std::string& saveFileName);
 

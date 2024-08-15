@@ -6,7 +6,7 @@
 #include "chirpParameters.h"
 
 namespace chirpParameters {
-    static bool next2power(int x) {
+    static bool is2power(int x) {
         return (x > 0) && ((x & (x - 1)) == 0);
     }
 
@@ -113,6 +113,8 @@ namespace chirpParameters {
         this->keyStringsCfar[5] = STR_KEY_dopplerReference;
         this->keyStringsCfar[6] = STR_KEY_dopplerAlpha;
         this->keyStringsCfar[7] = STR_KEY_dopplerBias_dB;
+
+        this->computeErrorFlag = CP_OK;
     }
 
     void ChirpParameterHandler::set_default() {
@@ -136,21 +138,14 @@ namespace chirpParameters {
         this->data.intData.v[chirpLoopsIdx] = 64;
         this->data.boolData.v[iqSampleIdx] = true;
         this->data.intData.v[antTDMIdx] = 1;
+        this->data.intData.v[rxIdx] = 1;
         this->data.intData.v[rangeFFTSizeIdx] = this->data.intData.v[ADCPointsIdx];
         this->data.intData.v[dopplerFFTSizeIdx] = this->data.intData.v[chirpLoopsIdx];
-        this->data.cfar.boolData.v[enabledIdx] = true;
-        this->data.cfar.intData.t.rangeGuard = 2;
-        this->data.cfar.intData.t.rangeReference = 4;
-        this->data.cfar.floatData.t.rangeAlpha = 10.f;
-        this->data.cfar.floatData.t.rangeBias_dB = 2.f;
-        this->data.cfar.intData.t.dopplerGuard = 2;
-        this->data.cfar.intData.t.dopplerReference = 4;
-        this->data.cfar.floatData.t.dopplerAlpha = 10.f;
-        this->data.cfar.floatData.t.dopplerBias_dB = 2.f;
+        this->data.cfar.boolData.v[enabledIdx] = false;
         this->compute_and_validate();
     }
 
-    bool ChirpParameterHandler::compute_and_validate() {
+    void ChirpParameterHandler::compute_and_validate() {
         this->data.floatData.t.lambdaStart_mm = 3e5f / this->data.floatData.t.startFrequency_MHz;
         this->data.floatData.t.lambdaCenter_mm = 3e5f / (this->data.floatData.t.startFrequency_MHz + this->data.floatData.t.bandWidth_MHz / 2.f);
         this->data.floatData.t.slope_MHzus = this->data.floatData.t.bandWidth_MHz / this->data.floatData.t.rampTime_us;
@@ -166,107 +161,113 @@ namespace chirpParameters {
             this->data.floatData.t.dMax_m /= 2.f;
         }
         this->data.floatData.t.dRes_m = 1.5e2f / this->data.floatData.t.ADCBandWidth_MHz;
-        this->data.floatData.t.dResCompute_m = this->data.floatData.t.dMax_m / (float)this->data.intData.t.rangeFFTSize * 2.f;
+        this->data.floatData.t.dResCompute_m = this->data.floatData.t.dMax_m / (float)this->data.intData.t.rangeFFTSize;
+        if (!this->data.boolData.t.iqSample) {
+            this->data.floatData.t.dResCompute_m *= 2.f;  // lost half of the FFT valid length
+        }
         this->data.floatData.t.vMax_m_s = this->data.floatData.t.lambdaCenter_mm / 4.f / this->data.floatData.t.TcTDM_us * 1e3f;
         this->data.floatData.t.vRes_m_s = this->data.floatData.t.lambdaCenter_mm / 2.f / this->data.floatData.t.Tf_us * 1e3f;
         this->data.floatData.t.vResCompute_m_s = this->data.floatData.t.vMax_m_s / (float)this->data.intData.t.dopplerFFTSize * 2.f;
         this->data.floatData.t.dopplerSampleRate_sps = 1.f / this->data.floatData.t.TcTDM_us * 1e6f;
         this->data.floatData.t.oneMeterIF_kHz = 20.f * this->data.floatData.t.slope_MHzus / 3.f;
         this->data.floatData.t.oneResBinIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dRes_m;
-        this->data.floatData.t.oneResComputeBinIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dMax_m;
-
+        this->data.floatData.t.oneResComputeBinIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dResCompute_m;
+        this->data.floatData.t.maxIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dMax_m;
+        this->data.floatData.t.f32radarCube_kB = (float)this->data.intData.t.antTDM * (float)this->data.intData.t.rx * (float)this->data.intData.t.rangeFFTSize * (float)this->data.intData.t.dopplerFFTSize / 128.f;
+        this->computeErrorFlag = CP_ERR;
         if (this->data.floatData.t.dutyCycle_percent > 100) {
             this->errMsg = "duty cycle larger than 100%";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.maxADCPoints != -1) {
             if (this->data.intData.t.ADCPoints > this->data.intData.t.maxADCPoints) {
                 this->errMsg = "ADC points larger than limit";
-                return CP_ERR;
+                return;
             }
         }
 
         if (this->data.intData.t.maxChirpLoops != -1) {
             if (this->data.intData.t.chirpLoops > this->data.intData.t.maxChirpLoops) {
                 this->errMsg = "chirp loops larger than limit";
-                return CP_ERR;
+                return;
             }
         }
 
         if (this->data.intData.t.maxRangeFFTSize != -1) {
             if (this->data.intData.t.rangeFFTSize > this->data.intData.t.maxRangeFFTSize) {
                 this->errMsg = "range FFT size larger than limit";
-                return CP_ERR;
+                return;
             }
         }
 
         if (this->data.intData.t.maxDopplerFFTSize != -1) {
             if (this->data.intData.t.dopplerFFTSize > this->data.intData.t.maxDopplerFFTSize) {
                 this->errMsg = "doppler FFT size larger than limit";
-                return CP_ERR;
+                return;
             }
         }
 
         if (this->data.intData.t.ADCPoints < this->data.intData.t.minADCPoints) {
             this->errMsg = "ADC points lower than limit";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.chirpLoops < this->data.intData.t.minChirpLoops) {
             this->errMsg = "chirp loops lower than limit";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.rangeFFTSize < this->data.intData.t.minRangeFFTSize) {
             this->errMsg = "range FFT size lower than limit";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.dopplerFFTSize < this->data.intData.t.minDopplerFFTSize) {
             this->errMsg = "doppler FFT size lower than limit";
-            return CP_ERR;
+            return;
         }
 
         if ((this->data.floatData.t.maxADCTime_us < 0) || (this->data.floatData.t.ADCDelay_us + this->data.floatData.t.ADCTime_us > this->data.floatData.t.rampTime_us)) {
             this->errMsg = "ADC delay too long";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.floatData.t.ADCTime_us > this->data.floatData.t.maxADCTime_us) {
             this->errMsg = "ADC sample time too long";
-            return CP_ERR;
+            return;
         }
 
-        if (!next2power(this->data.intData.t.rangeFFTSize)) {
+        if (!is2power(this->data.intData.t.rangeFFTSize)) {
             this->errMsg = "range FFT size must be a power of 2";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.rangeFFTSize < this->data.intData.t.ADCPoints) {
             this->errMsg = "range FFT size can not lower than ADC points";
-            return CP_ERR;
+            return;
         }
 
-        if (!next2power(this->data.intData.t.dopplerFFTSize)) {
+        if (!is2power(this->data.intData.t.dopplerFFTSize)) {
             this->errMsg = "doppler FFT size must be a power of 2";
-            return CP_ERR;
+            return;
         }
 
         if (this->data.intData.t.dopplerFFTSize < this->data.intData.t.chirpLoops) {
             this->errMsg = "doppler FFT size can not lower than chirp loops";
-            return CP_ERR;
+            return;
         }
 
+        this->computeErrorFlag = CP_OK;
         this->errMsg = "no error in parameters";
-        return CP_OK;
     }
 
     void ChirpParameterHandler::save_cfg(const std::string& saveFileName) {
         if (saveFileName.empty()) {
             return;
         }
-        if (this->compute_and_validate() == CP_ERR) {
+        this->compute_and_validate();
+        if (this->computeErrorFlag == CP_ERR) {
             return;
         }
 

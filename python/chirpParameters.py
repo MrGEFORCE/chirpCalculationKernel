@@ -72,6 +72,7 @@ class ChirpParameterData(CfarParameterData):
     chirpLoops: int
     iqSample: bool
     antTDM: int
+    rx: int
 
     # processing parameters
     rangeFFTSize: int
@@ -109,17 +110,19 @@ class ChirpParameterData(CfarParameterData):
     oneMeterIF_kHz: float
     oneResBinIF_kHz: float
     oneResComputeBinIF_kHz: float
-    MaxIF_kHz: float
+    maxIF_kHz: float
+    f32radarCube_kB: float
 
 
 class ChirpParameterHandler(ChirpParameterData):
     def __init__(self):
         self.errMsg = ""
+        self.errFlag = CP_OK
         self.config = configparser.ConfigParser()
         self.config.optionxform = str
 
     @staticmethod
-    def next2power(x: int) -> bool:
+    def is2power(x: int) -> bool:
         return x > 0 and (x & (x - 1)) == 0
 
     def set_default(self) -> None:
@@ -144,13 +147,15 @@ class ChirpParameterHandler(ChirpParameterData):
         self.chirpLoops = 64
         self.iqSample = True
         self.antTDM = 1
+        self.rx = 1
 
         self.rangeFFTSize = self.ADCPoints
         self.dopplerFFTSize = self.chirpLoops
         self.cfarEnabled = False
         self.compute_and_validate()
 
-    def compute_and_validate(self) -> bool:
+    def compute_and_validate(self) -> None:
+        self.errFlag = CP_ERR
         self.lambdaStart_mm = 3e5 / self.startFrequency_MHz
         self.lambdaCenter_mm = 3e5 / (self.startFrequency_MHz + self.bandWidth_MHz / 2)
         self.slope_MHzus = self.bandWidth_MHz / self.rampTime_us
@@ -165,7 +170,9 @@ class ChirpParameterHandler(ChirpParameterData):
         if not self.iqSample:
             self.dMax_m /= 2
         self.dRes_m = 1.5e2 / self.ADCBandWidth_MHz
-        self.dResCompute_m = self.dMax_m / self.rangeFFTSize * 2
+        self.dResCompute_m = self.dMax_m / self.rangeFFTSize
+        if not self.iqSample:
+            self.dResCompute_m *= 2
         self.vMax_m_s = self.lambdaCenter_mm / 4 / self.TcTDM_us * 1e3
         self.vRes_m_s = self.lambdaCenter_mm / 2 / self.Tf_us * 1e3
         self.vResCompute_m_s = self.vMax_m_s / self.dopplerFFTSize * 2
@@ -173,74 +180,75 @@ class ChirpParameterHandler(ChirpParameterData):
         self.oneMeterIF_kHz = 20 * self.slope_MHzus / 3
         self.oneResBinIF_kHz = self.oneMeterIF_kHz * self.dRes_m
         self.oneResComputeBinIF_kHz = self.oneMeterIF_kHz * self.dResCompute_m
-        self.MaxIF_kHz = self.oneMeterIF_kHz * self.dMax_m
+        self.maxIF_kHz = self.oneMeterIF_kHz * self.dMax_m
+        self.f32radarCube_kB = self.antTDM * self.rx * self.rangeFFTSize * self.dopplerFFTSize / 128.
 
         if self.dutyCycle_percent > 100:
             self.errMsg = "duty cycle larger than 100%"
-            return CP_ERR
+            return
 
         if self.maxADCPoints != -1:
             if self.ADCPoints > self.maxADCPoints:
                 self.errMsg = "ADC points larger than limit"
-                return CP_ERR
+                return
 
         if self.maxChirpLoops != -1:
             if self.chirpLoops > self.maxChirpLoops:
                 self.errMsg = "chirp loops larger than limit"
-                return CP_ERR
+                return
 
         if self.maxRangeFFTSize != -1:
             if self.rangeFFTSize > self.maxRangeFFTSize:
                 self.errMsg = "range FFT size larger than limit"
-                return CP_ERR
+                return
 
         if self.maxDopplerFFTSize != -1:
             if self.dopplerFFTSize > self.maxDopplerFFTSize:
                 self.errMsg = "doppler FFT size larger than limit"
-                return CP_ERR
+                return
 
         if self.ADCPoints < self.minADCPoints:
             self.errMsg = "ADC points lower than limit"
-            return CP_ERR
+            return
 
         if self.chirpLoops < self.minChirpLoops:
             self.errMsg = "chirp loops lower than limit"
-            return CP_ERR
+            return
 
         if self.rangeFFTSize < self.minRangeFFTSize:
             self.errMsg = "range FFT size lower than limit"
-            return CP_ERR
+            return
 
         if self.dopplerFFTSize < self.minDopplerFFTSize:
             self.errMsg = "doppler FFT size lower than limit"
-            return CP_ERR
+            return
 
         if self.maxADCTime_us < 0 or (self.ADCDelay_us + self.ADCTime_us > self.rampTime_us):
             self.errMsg = "ADC delay too long"
-            return CP_ERR
+            return
 
         if self.ADCTime_us > self.maxADCTime_us:
             self.errMsg = "ADC sample time too long"
-            return CP_ERR
+            return
 
-        if not self.next2power(self.rangeFFTSize):
+        if not self.is2power(self.rangeFFTSize):
             self.errMsg = "range FFT size must be a power of 2"
-            return CP_ERR
+            return
 
         if self.rangeFFTSize < self.ADCPoints:
             self.errMsg = "range FFT size can not lower than ADC points"
-            return CP_ERR
+            return
 
-        if not self.next2power(self.dopplerFFTSize):
+        if not self.is2power(self.dopplerFFTSize):
             self.errMsg = "doppler FFT size must be a power of 2"
-            return CP_ERR
+            return
 
         if self.dopplerFFTSize < self.chirpLoops:
             self.errMsg = "doppler FFT size can not lower than chirp loops"
-            return CP_ERR
+            return
 
         self.errMsg = "no error in parameters"
-        return CP_OK
+        self.errFlag = CP_OK
 
     def gen_description(self) -> str:
         s = "[chirp parameters]\n"
@@ -279,7 +287,8 @@ class ChirpParameterHandler(ChirpParameterData):
         return s
 
     def save_cfg(self, directory: str) -> None:
-        if not self.compute_and_validate():
+        self.compute_and_validate()
+        if not self.errFlag:
             return
 
         self.config["chirp parameters"] = {
