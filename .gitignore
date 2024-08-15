@@ -3,6 +3,7 @@
 venv
 
 .vscode
+.cache
 build
 deploy
 

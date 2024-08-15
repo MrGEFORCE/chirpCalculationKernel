@@ -27,7 +27,7 @@ You should be familiar with the basic theory of FMCW radar signal processing, ot
 - toolchains:
     - MSVC (pending validation)
     - MinGW (recommended, confirmed)
-    - clang & llvm (pending validation)
+    - clang & llvm (Apple, confirmed)
     - GNU (for linux)
 - IDE: CLion or VsCode (recommended)
 
