@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "config.h"
 #include "chirpParameters.h"
@@ -115,8 +116,33 @@ namespace chirpParameters {
         this->keyStringsCfar[6] = STR_KEY_dopplerAlpha;
         this->keyStringsCfar[7] = STR_KEY_dopplerBias_dB;
 
+        this->strErr = std::vector<std::string>(errStrNums);
+        this->languageCfgFileFolder = "";
+
         this->computeErrorFlag = CP_OK;
         this->slopePriority = spBandwidthFirst; // default
+    }
+
+    void ChirpParameterHandler::setLanguageFileDir(std::string dir) {
+        this->languageCfgFileFolder = std::move(dir);
+    }
+
+    void ChirpParameterHandler::changeLanguage(languageType_e flag) {
+        std::ifstream langFile;
+        switch (flag) {
+            case langZhCNIdx:
+                langFile.open(this->languageCfgFileFolder + "/" + langZhCNFileName);
+                break;
+            case langEnUSIdx:
+                langFile.open(this->languageCfgFileFolder + "/" + langEnUSFileName);
+                break;
+            default:  // en_US
+                langFile.open(this->languageCfgFileFolder + "/" + langEnUSFileName);
+        }
+
+        for (int i=0;i<errStrNums;i++) {
+            std::getline(langFile, this->strErr[i]);
+        }
     }
 
     void ChirpParameterHandler::set_default() {
@@ -182,90 +208,90 @@ namespace chirpParameters {
         this->data.floatData.t.f32radarCube_kB = (float)this->data.intData.t.antTDM * (float)this->data.intData.t.rx * (float)this->data.intData.t.rangeFFTSize * (float)this->data.intData.t.dopplerFFTSize / 128.f;
         this->computeErrorFlag = CP_ERR;
         if (this->data.floatData.t.dutyCycle_percent > 100) {
-            this->errMsg = "duty cycle larger than 100%";
+            this->errMsg = this->strErr[errDutyCycleGT100];
             return;
         }
 
         if (this->data.intData.t.maxADCPoints != 0) {
             if (this->data.intData.t.ADCPoints > this->data.intData.t.maxADCPoints) {
-                this->errMsg = "ADC points larger than limit";
+                this->errMsg = this->strErr[errADCPointsGTLimit];
                 return;
             }
         }
 
         if (this->data.intData.t.maxChirpLoops != 0) {
             if (this->data.intData.t.chirpLoops > this->data.intData.t.maxChirpLoops) {
-                this->errMsg = "chirp loops larger than limit";
+                this->errMsg = this->strErr[errChirpLoopsGTLimit];
                 return;
             }
         }
 
         if (this->data.intData.t.maxRangeFFTSize != 0) {
             if (this->data.intData.t.rangeFFTSize > this->data.intData.t.maxRangeFFTSize) {
-                this->errMsg = "range FFT size larger than limit";
+                this->errMsg = this->strErr[errRangeFFTSizeGTLimit];
                 return;
             }
         }
 
         if (this->data.intData.t.maxDopplerFFTSize != 0) {
             if (this->data.intData.t.dopplerFFTSize > this->data.intData.t.maxDopplerFFTSize) {
-                this->errMsg = "doppler FFT size larger than limit";
+                this->errMsg = this->strErr[errDopplerFFTSizeGTLimit];
                 return;
             }
         }
 
         if (this->data.intData.t.ADCPoints < this->data.intData.t.minADCPoints) {
-            this->errMsg = "ADC points lower than limit";
+            this->errMsg = this->strErr[errADCPointsLTLimit];
             return;
         }
 
         if (this->data.intData.t.chirpLoops < this->data.intData.t.minChirpLoops) {
-            this->errMsg = "chirp loops lower than limit";
+            this->errMsg = this->strErr[errChirpLoopsLTLimit];
             return;
         }
 
         if (this->data.intData.t.rangeFFTSize < this->data.intData.t.minRangeFFTSize) {
-            this->errMsg = "range FFT size lower than limit";
+            this->errMsg = this->strErr[errRangeFFTSizeLTLimit];
             return;
         }
 
         if (this->data.intData.t.dopplerFFTSize < this->data.intData.t.minDopplerFFTSize) {
-            this->errMsg = "doppler FFT size lower than limit";
+            this->errMsg = this->strErr[errDopplerFFTSizeLTLimit];
             return;
         }
 
         if ((this->data.floatData.t.maxADCTime_us < 0) || (this->data.floatData.t.ADCDelay_us + this->data.floatData.t.ADCTime_us > this->data.floatData.t.rampTime_us)) {
-            this->errMsg = "ADC delay too long";
+            this->errMsg = this->strErr[errADCDelayTooLong];
             return;
         }
 
         if (this->data.floatData.t.ADCTime_us > this->data.floatData.t.maxADCTime_us) {
-            this->errMsg = "ADC sample time too long";
+            this->errMsg = this->strErr[errADCSampleTimeTooLong];
             return;
         }
 
         if (!is2power(this->data.intData.t.rangeFFTSize)) {
-            this->errMsg = "range FFT size must be a power of 2";
+            this->errMsg = this->strErr[errRangeFFTSIzeNotPower2];
             return;
         }
 
         if (this->data.intData.t.rangeFFTSize < this->data.intData.t.ADCPoints) {
-            this->errMsg = "range FFT size can not lower than ADC points";
+            this->errMsg = this->strErr[errRangeFFTSizeLTADCPoints];
             return;
         }
 
         if (!is2power(this->data.intData.t.dopplerFFTSize)) {
-            this->errMsg = "doppler FFT size must be a power of 2";
+            this->errMsg = this->strErr[errDopplerFFTSIzeNotPower2];
             return;
         }
 
         if (this->data.intData.t.dopplerFFTSize < this->data.intData.t.chirpLoops) {
-            this->errMsg = "doppler FFT size can not lower than chirp loops";
+            this->errMsg = this->strErr[errDopplerFFTSizeLTChirpLoops];
             return;
         }
 
         this->computeErrorFlag = CP_OK;
-        this->errMsg = "no error in parameters";
+        this->errMsg = this->strErr[errNoErr];
     }
 
     void ChirpParameterHandler::save_cfg(const std::string& saveFileName) {
@@ -320,16 +346,17 @@ namespace chirpParameters {
         if (loadFileName.empty()) {
             return;
         }
+        this->loadErrorFlag = CP_ERR;
         bool ret = this->configParser.ReadConfig(loadFileName);
         if (!ret) {
-            this->errMsg = "file read error";
+            this->errMsg = this->strErr[errFileReadErr];
             return;
         }
         std::string tempStr;
         // basic part
         for (int i = 0;i < CFG_BASIC_LINES;i++) {
             tempStr = this->configParser.ReadString(STR_SEC_CHIRP, this->keyStringsBasic[i].c_str(), "");
-            if (tempStr.empty()) {this->errMsg = "file read error"; return;}
+            if (tempStr.empty()) {this->errMsg = this->strErr[errFileReadErr]; return;}
             switch (this->strRefTypeMap[this->keyStringsBasic[i]]) {
                 case typeInt:
                     this->data.intData.v[this->strRefIdxMap[this->keyStringsBasic[i]]] = std::stoi(tempStr);
@@ -353,7 +380,7 @@ namespace chirpParameters {
         if (!tempStr.empty()) {
             for (int i = 0;i < CFG_CFAR_LINES;i++) {
                 tempStr = this->configParser.ReadString(STR_SEC_CFAR, this->keyStringsCfar[i].c_str(), "");
-                if (tempStr.empty()) {this->errMsg = "file read error"; return;}
+                if (tempStr.empty()) {this->errMsg = this->strErr[errFileReadErr]; return;}
                 switch (this->strRefTypeMap[this->keyStringsCfar[i]]) {
                     case typeInt:
                         this->data.cfar.intData.v[this->strRefIdxMap[this->keyStringsCfar[i]]] = std::stoi(tempStr);
@@ -368,6 +395,7 @@ namespace chirpParameters {
             this->data.cfar.boolData.t.enabled = true;
         }
         this->compute_and_validate();
+        this->loadErrorFlag = CP_OK;
     }
 
     ChirpParameterHandler::~ChirpParameterHandler() = default;

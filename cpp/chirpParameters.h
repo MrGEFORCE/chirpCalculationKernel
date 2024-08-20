@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "config.h"
+#include "language.h"
 
 namespace chirpParameters {
 
@@ -254,6 +255,9 @@ namespace chirpParameters {
 
     class ChirpParameterHandler {
     public:
+        std::vector<std::string> strErr;
+        std::string languageCfgFileFolder;
+
         ChirpParameterData_t data{};
         std::string errMsg;
         std::vector<std::string> keyStringsBasic;
@@ -263,9 +267,14 @@ namespace chirpParameters {
         config::RrConfig configParser;
 
         bool computeErrorFlag;
+        bool loadErrorFlag;
         slopePriority_e slopePriority;
 
         ChirpParameterHandler();
+
+        void setLanguageFileDir(std::string dir);
+
+        void changeLanguage(languageType_e flag);
 
         void set_default();
 

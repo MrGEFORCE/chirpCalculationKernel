@@ -11,6 +11,9 @@ out
 
 *.cfg
 
+# for locales
+!locales/*.cfg
+
 # for python
 __pycache__
 *.pyproject.user

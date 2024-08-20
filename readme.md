@@ -31,9 +31,11 @@ You should be familiar with the basic theory of FMCW radar signal processing, ot
     - GNU (for linux)
 - IDE: CLion or VsCode (recommended)
 
-3. for matlab: to do
+3. for C#: to do
 
-4. for GoLang: to do
+4. for matlab: to do
+
+5. for GoLang: to do
 
 ---
 
@@ -49,6 +51,8 @@ See the file named "example.*" for every language.
 
 - The .cfg description file is case-sensitive.
 - There is a certain relationship between bandwidth, ramp time, and slope. Users can choose slope priority or bandwidth priority. The default setting of the program is bandwidth priority, which calculates the slope given the bandwidth.
+- Error and waring infos support multiple languages (currently support zh_CN and en_US).
+- Language pack folder path and language type must be explicitly initialized (c version uses error index to indicate the error types).
 
 1. For python:
 
@@ -59,8 +63,8 @@ See the file named "example.*" for every language.
 
 2. For c & c++:
 
-- c version DO NOT provide .cfg API, because it's mainly targeting for embedded development. The development on computer should always use c++ version.
 - Can be exported as a lib, either in static or dynamic, but need to change CMakeLists. The profiles for executable, static library and dynamic library are all in the CMakeLists. When using, uncomment the chosen one and reload CMakeLists (don't forget this).
+- c version DO NOT provide .cfg API, because it's mainly targeting for embedded development. The development on computer should always use c++ version.
 - c version still in progress.
 
 ---

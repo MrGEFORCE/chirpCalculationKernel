@@ -7,6 +7,33 @@ CP_OK = True
 SP_SLOPE_FIRST = 0
 SP_BANDWIDTH_FIRST = 1
 
+LANG_ZH_CN = 0
+LANG_EN_US = 1
+
+LANGUAGE_DIC = {LANG_ZH_CN: "zh_CN.cfg", LANG_EN_US: "en_US.cfg", }
+
+
+@dataclass
+class StrErrIdxEnum:
+    errDutyCycleGT100: int = 0
+    errADCPointsGTLimit: int = 1
+    errChirpLoopsGTLimit: int = 2
+    errRangeFFTSizeGTLimit: int = 3
+    errDopplerFFTSizeGTLimit: int = 4
+    errADCPointsLTLimit: int = 5
+    errChirpLoopsLTLimit: int = 6
+    errRangeFFTSizeLTLimit: int = 7
+    errDopplerFFTSizeLTLimit: int = 8
+    errADCDelayTooLong: int = 9
+    errADCSampleTimeTooLong: int = 10
+    errRangeFFTSIzeNotPower2: int = 11
+    errRangeFFTSizeLTADCPoints: int = 12
+    errDopplerFFTSIzeNotPower2: int = 13
+    errDopplerFFTSizeLTChirpLoops: int = 14
+    errNoErr: int = 15
+    errFileReadErr: int = 16
+    errStrNums: int = 17
+
 
 # for save and load .cfg file
 @dataclass
@@ -123,11 +150,20 @@ class ChirpParameterHandler(ChirpParameterData):
         self.errFlag = CP_OK
         self.config = configparser.ConfigParser()
         self.config.optionxform = str
-        self.slopePriority = SP_SLOPE_FIRST
+        self.slopePriority = SP_BANDWIDTH_FIRST
+
+        self.languageCfgFileFolder = ""
+        self.strErr = []
 
     @staticmethod
     def is2power(x: int) -> bool:
         return x > 0 and (x & (x - 1)) == 0
+
+    def setLanguage(self, idx: int):
+        lines = open(self.languageCfgFileFolder + "/" + LANGUAGE_DIC[idx], encoding='utf-8').readlines()
+        self.strErr.clear()
+        for i in range(int(StrErrIdxEnum.errStrNums)):
+            self.strErr.append(lines[i][:-1])  # discard "\n"
 
     def set_default(self) -> None:
         self.minADCPoints = 0
@@ -192,70 +228,70 @@ class ChirpParameterHandler(ChirpParameterData):
         self.f32radarCube_kB = self.antTDM * self.rx * self.rangeFFTSize * self.dopplerFFTSize / 128.
 
         if self.dutyCycle_percent > 100:
-            self.errMsg = "duty cycle larger than 100%"
+            self.errMsg = self.strErr[StrErrIdxEnum.errDutyCycleGT100]
             return
 
         if self.maxADCPoints != 0:
             if self.ADCPoints > self.maxADCPoints:
-                self.errMsg = "ADC points larger than limit"
+                self.errMsg = self.strErr[StrErrIdxEnum.errADCPointsGTLimit]
                 return
 
         if self.maxChirpLoops != 0:
             if self.chirpLoops > self.maxChirpLoops:
-                self.errMsg = "chirp loops larger than limit"
+                self.errMsg = self.strErr[StrErrIdxEnum.errChirpLoopsGTLimit]
                 return
 
         if self.maxRangeFFTSize != 0:
             if self.rangeFFTSize > self.maxRangeFFTSize:
-                self.errMsg = "range FFT size larger than limit"
+                self.errMsg = self.strErr[StrErrIdxEnum.errRangeFFTSizeGTLimit]
                 return
 
         if self.maxDopplerFFTSize != 0:
             if self.dopplerFFTSize > self.maxDopplerFFTSize:
-                self.errMsg = "doppler FFT size larger than limit"
+                self.errMsg = self.strErr[StrErrIdxEnum.errDopplerFFTSizeGTLimit]
                 return
 
         if self.ADCPoints < self.minADCPoints:
-            self.errMsg = "ADC points lower than limit"
+            self.errMsg = self.strErr[StrErrIdxEnum.errADCPointsLTLimit]
             return
 
         if self.chirpLoops < self.minChirpLoops:
-            self.errMsg = "chirp loops lower than limit"
+            self.errMsg = self.strErr[StrErrIdxEnum.errChirpLoopsLTLimit]
             return
 
         if self.rangeFFTSize < self.minRangeFFTSize:
-            self.errMsg = "range FFT size lower than limit"
+            self.errMsg = self.strErr[StrErrIdxEnum.errRangeFFTSizeLTLimit]
             return
 
         if self.dopplerFFTSize < self.minDopplerFFTSize:
-            self.errMsg = "doppler FFT size lower than limit"
+            self.errMsg = self.strErr[StrErrIdxEnum.errDopplerFFTSizeLTLimit]
             return
 
         if self.maxADCTime_us < 0 or (self.ADCDelay_us + self.ADCTime_us > self.rampTime_us):
-            self.errMsg = "ADC delay too long"
+            self.errMsg = self.strErr[StrErrIdxEnum.errADCDelayTooLong]
             return
 
         if self.ADCTime_us > self.maxADCTime_us:
-            self.errMsg = "ADC sample time too long"
+            self.errMsg = self.strErr[StrErrIdxEnum.errADCSampleTimeTooLong]
             return
 
         if not self.is2power(self.rangeFFTSize):
-            self.errMsg = "range FFT size must be a power of 2"
+            self.errMsg = self.strErr[StrErrIdxEnum.errRangeFFTSIzeNotPower2]
             return
 
         if self.rangeFFTSize < self.ADCPoints:
-            self.errMsg = "range FFT size can not lower than ADC points"
+            self.errMsg = self.strErr[StrErrIdxEnum.errRangeFFTSizeLTADCPoints]
             return
 
         if not self.is2power(self.dopplerFFTSize):
-            self.errMsg = "doppler FFT size must be a power of 2"
+            self.errMsg = self.strErr[StrErrIdxEnum.errDopplerFFTSIzeNotPower2]
             return
 
         if self.dopplerFFTSize < self.chirpLoops:
-            self.errMsg = "doppler FFT size can not lower than chirp loops"
+            self.errMsg = self.strErr[StrErrIdxEnum.errDopplerFFTSizeLTChirpLoops]
             return
 
-        self.errMsg = "no error in parameters"
+        self.errMsg = self.strErr[StrErrIdxEnum.errNoErr]
         self.errFlag = CP_OK
 
     def gen_description(self) -> str:
@@ -350,5 +386,5 @@ class ChirpParameterHandler(ChirpParameterData):
                     elif type(self.__dict__[key]) is bool:
                         self.__dict__[key] = True if self.config[sec][key] == "yes" else False
                 except KeyError:
-                    self.errMsg = "unexpected key found in cfg."
+                    self.errMsg = self.strErr[StrErrIdxEnum.errFileReadErr]
         self.compute_and_validate()
