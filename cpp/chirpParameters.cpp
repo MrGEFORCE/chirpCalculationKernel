@@ -148,10 +148,10 @@ namespace chirpParameters {
         this->data.intData.v[minChirpLoopsIdx] = 0;
         this->data.intData.v[minRangeFFTSizeIdx] = 0;
         this->data.intData.v[minDopplerFFTSizeIdx] = 0;
-        this->data.intData.v[maxADCPointsIdx] = -1;  // unlimited
-        this->data.intData.v[maxChirpLoopsIdx] = -1;
-        this->data.intData.v[maxRangeFFTSizeIdx] = -1;
-        this->data.intData.v[maxDopplerFFTSizeIdx] = -1;
+        this->data.intData.v[maxADCPointsIdx] = 0;  // unlimited
+        this->data.intData.v[maxChirpLoopsIdx] = 0;
+        this->data.intData.v[maxRangeFFTSizeIdx] = 0;
+        this->data.intData.v[maxDopplerFFTSizeIdx] = 0;
         this->data.boolData.v[staticClutterRemovalIdx] = true;
         this->data.floatData.v[startFrequency_MHzIdx] = 77e3f;
         this->data.floatData.v[bandWidth_MHzIdx] = 3e3f;

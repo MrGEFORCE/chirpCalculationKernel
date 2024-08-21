@@ -66,7 +66,6 @@ See the file named "example.*" for every language.
 2. For c & c++:
 - Can be exported as a lib, either in static or dynamic, but need to change CMakeLists. The profiles for executable, static library and dynamic library are all in the CMakeLists. When using, uncomment the chosen one and reload CMakeLists (don't forget this).
 - c version DO NOT provide .cfg API, because it's mainly targeting for embedded development. The development on computer should always use c++ version.
-- c version still in progress.
 
 3. For c#:
 -
