@@ -62,6 +62,7 @@ class ChirpParameterString(CfarParameterString):
     chirpLoops: str = "chirpLoops"
     iqSample: str = "iqSample"
     antTDM: str = "antTDM"
+    rx: str = "rx"
     rangeFFTSize: str = "rangeFFTSize"
     dopplerFFTSize: str = "dopplerFFTSize"
     minADCPoints: str = "minADCPoints"
@@ -307,6 +308,7 @@ class ChirpParameterHandler(ChirpParameterData):
         s += ChirpParameterString.chirpLoops + " = " + str(self.chirpLoops) + "\n"
         s += ChirpParameterString.iqSample + " = " + ("yes" if self.iqSample else "no") + "\n"
         s += ChirpParameterString.antTDM + " = " + str(self.antTDM) + "\n"
+        s += ChirpParameterString.rx + " = " + str(self.rx) + "\n"
         s += ChirpParameterString.rangeFFTSize + " = " + str(self.rangeFFTSize) + "\n"
         s += ChirpParameterString.dopplerFFTSize + " = " + str(self.dopplerFFTSize) + "\n"
         s += ChirpParameterString.minADCPoints + " = " + str(self.minADCPoints) + "\n"
@@ -347,6 +349,7 @@ class ChirpParameterHandler(ChirpParameterData):
             ChirpParameterString.chirpLoops: str(self.chirpLoops),
             ChirpParameterString.iqSample: "yes" if self.iqSample else "no",
             ChirpParameterString.antTDM: str(self.antTDM),
+            ChirpParameterString.rx: str(self.rx),
             ChirpParameterString.rangeFFTSize: str(self.rangeFFTSize),
             ChirpParameterString.dopplerFFTSize: str(self.dopplerFFTSize),
             ChirpParameterString.minADCPoints: str(self.minADCPoints),

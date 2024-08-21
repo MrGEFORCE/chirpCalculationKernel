@@ -2,7 +2,6 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
-#include <utility>
 
 #include "config.h"
 #include "chirpParameters.h"
@@ -31,6 +30,7 @@ namespace chirpParameters {
         this->strRefTypeMap[STR_KEY_chirpLoops] = typeInt;
         this->strRefTypeMap[STR_KEY_iqSample] = typeBool;
         this->strRefTypeMap[STR_KEY_antTDM] = typeInt;
+        this->strRefTypeMap[STR_KEY_rx] = typeInt;
         this->strRefTypeMap[STR_KEY_rangeFFTSize] = typeInt;
         this->strRefTypeMap[STR_KEY_dopplerFFTSize] = typeInt;
         this->strRefTypeMap[STR_KEY_minADCPoints] = typeInt;
@@ -62,6 +62,7 @@ namespace chirpParameters {
         this->strRefIdxMap[STR_KEY_chirpLoops] = chirpLoopsIdx;
         this->strRefIdxMap[STR_KEY_iqSample] = iqSampleIdx;
         this->strRefIdxMap[STR_KEY_antTDM] = antTDMIdx;
+        this->strRefIdxMap[STR_KEY_rx] = rxIdx;
         this->strRefIdxMap[STR_KEY_rangeFFTSize] = rangeFFTSizeIdx;
         this->strRefIdxMap[STR_KEY_dopplerFFTSize] = dopplerFFTSizeIdx;
         this->strRefIdxMap[STR_KEY_minADCPoints] = minADCPointsIdx;
@@ -94,17 +95,18 @@ namespace chirpParameters {
         this->keyStringsBasic[8] = STR_KEY_chirpLoops;
         this->keyStringsBasic[9] = STR_KEY_iqSample;
         this->keyStringsBasic[10] = STR_KEY_antTDM;
-        this->keyStringsBasic[11] = STR_KEY_rangeFFTSize;
-        this->keyStringsBasic[12] = STR_KEY_dopplerFFTSize;
-        this->keyStringsBasic[13] = STR_KEY_minADCPoints;
-        this->keyStringsBasic[14] = STR_KEY_minChirpLoops;
-        this->keyStringsBasic[15] = STR_KEY_minRangeFFTSize;
-        this->keyStringsBasic[16] = STR_KEY_minDopplerFFTSize;
-        this->keyStringsBasic[17] = STR_KEY_maxADCPoints;
-        this->keyStringsBasic[18] = STR_KEY_maxChirpLoops;
-        this->keyStringsBasic[19] = STR_KEY_maxRangeFFTSize;
-        this->keyStringsBasic[20] = STR_KEY_maxDopplerFFTSize;
-        this->keyStringsBasic[21] = STR_KEY_staticClutterRemoval;
+        this->keyStringsBasic[11] = STR_KEY_rx;
+        this->keyStringsBasic[12] = STR_KEY_rangeFFTSize;
+        this->keyStringsBasic[13] = STR_KEY_dopplerFFTSize;
+        this->keyStringsBasic[14] = STR_KEY_minADCPoints;
+        this->keyStringsBasic[15] = STR_KEY_minChirpLoops;
+        this->keyStringsBasic[16] = STR_KEY_minRangeFFTSize;
+        this->keyStringsBasic[17] = STR_KEY_minDopplerFFTSize;
+        this->keyStringsBasic[18] = STR_KEY_maxADCPoints;
+        this->keyStringsBasic[19] = STR_KEY_maxChirpLoops;
+        this->keyStringsBasic[20] = STR_KEY_maxRangeFFTSize;
+        this->keyStringsBasic[21] = STR_KEY_maxDopplerFFTSize;
+        this->keyStringsBasic[22] = STR_KEY_staticClutterRemoval;
 
         this->keyStringsCfar = std::vector<std::string>(CFG_CFAR_LINES);
         this->keyStringsCfar[0] = STR_KEY_rangeGuard;
@@ -123,11 +125,7 @@ namespace chirpParameters {
         this->slopePriority = spBandwidthFirst; // default
     }
 
-    void ChirpParameterHandler::setLanguageFileDir(std::string dir) {
-        this->languageCfgFileFolder = std::move(dir);
-    }
-
-    void ChirpParameterHandler::changeLanguage(languageType_e flag) {
+    void ChirpParameterHandler::set_language(languageType_e flag) {
         std::ifstream langFile;
         switch (flag) {
             case langZhCNIdx:
@@ -317,6 +315,7 @@ namespace chirpParameters {
         saveFile << STR_KEY_chirpLoops << " = " << this->data.intData.t.chirpLoops << "\n";
         saveFile << STR_KEY_iqSample << " = " << (this->data.boolData.t.iqSample ? "yes" : "no") << "\n";
         saveFile << STR_KEY_antTDM << " = " << this->data.intData.t.antTDM << "\n";
+        saveFile << STR_KEY_rx << " = " << this->data.intData.t.rx << "\n";
         saveFile << STR_KEY_rangeFFTSize << " = " << this->data.intData.t.rangeFFTSize << "\n";
         saveFile << STR_KEY_dopplerFFTSize << " = " << this->data.intData.t.dopplerFFTSize << "\n";
         saveFile << STR_KEY_minADCPoints << " = " << this->data.intData.t.minADCPoints << "\n";

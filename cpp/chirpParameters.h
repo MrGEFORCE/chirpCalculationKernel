@@ -27,6 +27,7 @@ namespace chirpParameters {
 #define STR_KEY_chirpLoops "chirpLoops"
 #define STR_KEY_iqSample "iqSample"
 #define STR_KEY_antTDM "antTDM"
+#define STR_KEY_rx "rx"
 #define STR_KEY_rangeFFTSize "rangeFFTSize"
 #define STR_KEY_dopplerFFTSize "dopplerFFTSize"
 #define STR_KEY_minADCPoints "minADCPoints"
@@ -38,7 +39,7 @@ namespace chirpParameters {
 #define STR_KEY_maxRangeFFTSize "maxRangeFFTSize"
 #define STR_KEY_maxDopplerFFTSize "maxDopplerFFTSize"
 #define STR_KEY_staticClutterRemoval "staticClutterRemoval"
-#define CFG_BASIC_LINES (22U)
+#define CFG_BASIC_LINES (23U)
 
 #define STR_KEY_rangeGuard "cfarRangeGuard"
 #define STR_KEY_rangeReference "cfarRangeReference"
@@ -272,9 +273,7 @@ namespace chirpParameters {
 
         ChirpParameterHandler();
 
-        void setLanguageFileDir(std::string dir);
-
-        void changeLanguage(languageType_e flag);
+        void set_language(languageType_e flag);
 
         void set_default();
 
