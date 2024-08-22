@@ -36,8 +36,9 @@ You should be familiar with the basic theory of FMCW radar signal processing, ot
 4. for MATLAB:
 - version: R2023a, no dependency (recommended)
 
-5. for GoLang: to do
--
+5. for GoLang:
+- GO 1.21.6
+- IDE: GoLand (recommended)
 
 6. for Rust: to do
 -
@@ -76,7 +77,7 @@ See the file named "example.*" for every language.
 - All the data is hold in a big struct called "chirp parameters handler" (cph).
 
 5. For GoLang:
--
+- Dependency: go-ini
 
 6. For Rust:
 -
@@ -86,6 +87,8 @@ See the file named "example.*" for every language.
 ### Acknowledgements and References
 
 [c++ lib for parsing .cfg file](https://blog.csdn.net/baidu_31872269/article/details/82766200)
+
+[GO lib for parsing .cfg file](https://github.com/go-ini/ini.git)
 
 ---
 

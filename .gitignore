@@ -28,3 +28,6 @@ cs/*/*/obj
 
 # for MATLAB
 *.asv
+
+# for go
+go/*.exe
