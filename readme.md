@@ -11,7 +11,7 @@
 ### Prerequisites
 
 You should be familiar with the basic theory of FMCW radar signal processing, otherwise the code is very hard to understand. Except for this, almost nothing else need to know because this project just do some simple calculation, saving and loading.
-
+[.gitignore](.gitignore)
 ---
 
 ### Environments
@@ -30,7 +30,8 @@ You should be familiar with the basic theory of FMCW radar signal processing, ot
 - IDE: CLion or VsCode (recommended)
 
 3. for C#: to do
-- 
+- .NET8.0
+- IDE: Rider or MSVC (recommended)
 
 4. for MATLAB:
 - version: R2023a, no dependency (recommended)
@@ -68,7 +69,8 @@ See the file named "example.*" for every language.
 - c version DO NOT provide .cfg API, because it's mainly targeting for embedded development. The development on computer should always use c++ version.
 
 3. For c#:
--
+- Dependency: SharpConfig.
+- The example is a full project.
 
 4. For MATLAB:
 - All the data is hold in a big struct called "chirp parameters handler" (cph).
@@ -76,7 +78,7 @@ See the file named "example.*" for every language.
 5. For GoLang:
 -
 
-5. For Rust:
+6. For Rust:
 -
 
 ---

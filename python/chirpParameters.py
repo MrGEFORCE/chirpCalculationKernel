@@ -160,7 +160,7 @@ class ChirpParameterHandler(ChirpParameterData):
     def is2power(x: int) -> bool:
         return x > 0 and (x & (x - 1)) == 0
 
-    def setLanguage(self, idx: int):
+    def set_language(self, idx: int):
         lines = open(self.languageCfgFileFolder + "/" + LANGUAGE_DIC[idx], encoding='utf-8').readlines()
         self.strErr.clear()
         for i in range(int(StrErrIdxEnum.errStrNums)):
@@ -379,6 +379,17 @@ class ChirpParameterHandler(ChirpParameterData):
     def load_cfg(self, directory: str) -> None:
         self.config.read(directory)
         sections = self.config.sections()
+        self.cfarEnabled = False
+        if "cfar parameters" in sections:  # apparent init
+            self.cfarEnabled = True
+            self.cfarRangeGuard = 0
+            self.cfarRangeReference = 0
+            self.cfarRangeAlpha = 0
+            self.cfarRangeBias_dB = 0
+            self.cfarDopplerGuard = 0
+            self.cfarDopplerReference = 0
+            self.cfarDopplerAlpha = 0
+            self.cfarDopplerBias_dB = 0
         for sec in sections:
             for key in self.config[sec]:
                 try:
