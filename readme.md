@@ -11,7 +11,7 @@
 ### Prerequisites
 
 You should be familiar with the basic theory of FMCW radar signal processing, otherwise the code is very hard to understand. Except for this, almost nothing else need to know because this project just do some simple calculation, saving and loading.
-[.gitignore](.gitignore)
+
 ---
 
 ### Environments
