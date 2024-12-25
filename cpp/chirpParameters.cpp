@@ -42,14 +42,6 @@ namespace chirpParameters {
         this->strRefTypeMap[STR_KEY_maxRangeFFTSize] = typeInt;
         this->strRefTypeMap[STR_KEY_maxDopplerFFTSize] = typeInt;
         this->strRefTypeMap[STR_KEY_staticClutterRemoval] = typeBool;
-        this->strRefTypeMap[STR_KEY_rangeGuard] = typeInt;
-        this->strRefTypeMap[STR_KEY_rangeReference] = typeInt;
-        this->strRefTypeMap[STR_KEY_rangeAlpha] = typeFloat;
-        this->strRefTypeMap[STR_KEY_rangeBias_dB] = typeFloat;
-        this->strRefTypeMap[STR_KEY_dopplerGuard] = typeInt;
-        this->strRefTypeMap[STR_KEY_dopplerReference] = typeInt;
-        this->strRefTypeMap[STR_KEY_dopplerAlpha] = typeFloat;
-        this->strRefTypeMap[STR_KEY_dopplerBias_dB] = typeFloat;
 
         this->strRefIdxMap[STR_KEY_startFrequency_MHz] = startFrequency_MHzIdx;
         this->strRefIdxMap[STR_KEY_bandWidth_MHz] = bandWidth_MHzIdx;
@@ -74,14 +66,6 @@ namespace chirpParameters {
         this->strRefIdxMap[STR_KEY_maxRangeFFTSize] = maxRangeFFTSizeIdx;
         this->strRefIdxMap[STR_KEY_maxDopplerFFTSize] = maxDopplerFFTSizeIdx;
         this->strRefIdxMap[STR_KEY_staticClutterRemoval] = staticClutterRemovalIdx;
-        this->strRefIdxMap[STR_KEY_rangeGuard] = rangeGuardIdx;
-        this->strRefIdxMap[STR_KEY_rangeReference] = rangeReferenceIdx;
-        this->strRefIdxMap[STR_KEY_rangeAlpha] = rangeAlphaIdx;
-        this->strRefIdxMap[STR_KEY_rangeBias_dB] = rangeBias_dBIdx;
-        this->strRefIdxMap[STR_KEY_dopplerGuard] = dopplerGuardIdx;
-        this->strRefIdxMap[STR_KEY_dopplerReference] = dopplerReferenceIdx;
-        this->strRefIdxMap[STR_KEY_dopplerAlpha] = dopplerAlphaIdx;
-        this->strRefIdxMap[STR_KEY_dopplerBias_dB] = dopplerBias_dBIdx;
 
         this->keyStringsBasic = std::vector<std::string>(CFG_BASIC_LINES);
         this->keyStringsBasic[0] = STR_KEY_startFrequency_MHz;
@@ -108,24 +92,15 @@ namespace chirpParameters {
         this->keyStringsBasic[21] = STR_KEY_maxDopplerFFTSize;
         this->keyStringsBasic[22] = STR_KEY_staticClutterRemoval;
 
-        this->keyStringsCfar = std::vector<std::string>(CFG_CFAR_LINES);
-        this->keyStringsCfar[0] = STR_KEY_rangeGuard;
-        this->keyStringsCfar[1] = STR_KEY_rangeReference;
-        this->keyStringsCfar[2] = STR_KEY_rangeAlpha;
-        this->keyStringsCfar[3] = STR_KEY_rangeBias_dB;
-        this->keyStringsCfar[4] = STR_KEY_dopplerGuard;
-        this->keyStringsCfar[5] = STR_KEY_dopplerReference;
-        this->keyStringsCfar[6] = STR_KEY_dopplerAlpha;
-        this->keyStringsCfar[7] = STR_KEY_dopplerBias_dB;
-
         this->strErr = std::vector<std::string>(errStrNums);
         this->languageCfgFileFolder = "";
 
         this->computeErrorFlag = CP_OK;
         this->slopePriority = spBandwidthFirst; // default
+        this->cfarHandler = new CFAR();
     }
 
-    void ChirpParameterHandler::set_language(languageType_e flag) {
+    void ChirpParameterHandler::setLanguage(languageType_e flag) {
         std::ifstream langFile;
         switch (flag) {
             case langZhCNIdx:
@@ -138,12 +113,12 @@ namespace chirpParameters {
                 langFile.open(this->languageCfgFileFolder + "/" + langEnUSFileName);
         }
 
-        for (int i=0;i<errStrNums;i++) {
+        for (int i = 0; i < errStrNums; i++) {
             std::getline(langFile, this->strErr[i]);
         }
     }
 
-    void ChirpParameterHandler::set_default() {
+    void ChirpParameterHandler::setDefault() {
         this->data.intData.v[minADCPointsIdx] = 0;
         this->data.intData.v[minChirpLoopsIdx] = 0;
         this->data.intData.v[minRangeFFTSizeIdx] = 0;
@@ -167,11 +142,11 @@ namespace chirpParameters {
         this->data.intData.v[rxIdx] = 1;
         this->data.intData.v[rangeFFTSizeIdx] = this->data.intData.v[ADCPointsIdx];
         this->data.intData.v[dopplerFFTSizeIdx] = this->data.intData.v[chirpLoopsIdx];
-        this->data.cfar.boolData.v[enabledIdx] = false;
-        this->compute_and_validate();
+        this->cfarHandler->set_default();
+        this->computeAndValidate();
     }
 
-    void ChirpParameterHandler::compute_and_validate() {
+    void ChirpParameterHandler::computeAndValidate() {
         if (this->slopePriority == spSlopeFirst) {
             this->data.floatData.t.bandWidth_MHz = this->data.floatData.t.rampTime_us * this->data.floatData.t.slope_MHzus;
         } else if (this->slopePriority == spBandwidthFirst) {
@@ -180,30 +155,30 @@ namespace chirpParameters {
         this->data.floatData.t.lambdaStart_mm = 3e5f / this->data.floatData.t.startFrequency_MHz;
         this->data.floatData.t.lambdaCenter_mm = 3e5f / (this->data.floatData.t.startFrequency_MHz + this->data.floatData.t.bandWidth_MHz / 2.f);
         this->data.floatData.t.Tc_us = this->data.floatData.t.idleTime_us + this->data.floatData.t.rampTime_us;
-        this->data.floatData.t.TcTDM_us = this->data.floatData.t.Tc_us * (float)this->data.intData.t.antTDM;
-        this->data.floatData.t.Tf_us = this->data.floatData.t.TcTDM_us * (float)this->data.intData.t.chirpLoops;
+        this->data.floatData.t.TcTDM_us = this->data.floatData.t.Tc_us * (float) this->data.intData.t.antTDM;
+        this->data.floatData.t.Tf_us = this->data.floatData.t.TcTDM_us * (float) this->data.intData.t.chirpLoops;
         this->data.floatData.t.dutyCycle_percent = this->data.floatData.t.Tf_us / this->data.floatData.t.periodicity_ms * 1e-1f;
         this->data.floatData.t.maxADCTime_us = this->data.floatData.t.rampTime_us - this->data.floatData.t.ADCDelay_us;
-        this->data.floatData.t.ADCTime_us = (float)this->data.intData.t.ADCPoints / this->data.floatData.t.sampleRate_ksps * 1e3f;
+        this->data.floatData.t.ADCTime_us = (float) this->data.intData.t.ADCPoints / this->data.floatData.t.sampleRate_ksps * 1e3f;
         this->data.floatData.t.ADCBandWidth_MHz = this->data.floatData.t.slope_MHzus * this->data.floatData.t.ADCTime_us;
         this->data.floatData.t.dMax_m = this->data.floatData.t.sampleRate_ksps * 15e-2f / this->data.floatData.t.slope_MHzus;
         if (!this->data.boolData.t.iqSample) {
             this->data.floatData.t.dMax_m /= 2.f;
         }
         this->data.floatData.t.dRes_m = 1.5e2f / this->data.floatData.t.ADCBandWidth_MHz;
-        this->data.floatData.t.dResCompute_m = this->data.floatData.t.dMax_m / (float)this->data.intData.t.rangeFFTSize;
+        this->data.floatData.t.dResCompute_m = this->data.floatData.t.dMax_m / (float) this->data.intData.t.rangeFFTSize;
         if (!this->data.boolData.t.iqSample) {
             this->data.floatData.t.dResCompute_m *= 2.f;  // lost half of the FFT valid length
         }
         this->data.floatData.t.vMax_m_s = this->data.floatData.t.lambdaCenter_mm / 4.f / this->data.floatData.t.TcTDM_us * 1e3f;
         this->data.floatData.t.vRes_m_s = this->data.floatData.t.lambdaCenter_mm / 2.f / this->data.floatData.t.Tf_us * 1e3f;
-        this->data.floatData.t.vResCompute_m_s = this->data.floatData.t.vMax_m_s / (float)this->data.intData.t.dopplerFFTSize * 2.f;
+        this->data.floatData.t.vResCompute_m_s = this->data.floatData.t.vMax_m_s / (float) this->data.intData.t.dopplerFFTSize * 2.f;
         this->data.floatData.t.dopplerSampleRate_sps = 1.f / this->data.floatData.t.TcTDM_us * 1e6f;
         this->data.floatData.t.oneMeterIF_kHz = 20.f * this->data.floatData.t.slope_MHzus / 3.f;
         this->data.floatData.t.oneResBinIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dRes_m;
         this->data.floatData.t.oneResComputeBinIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dResCompute_m;
         this->data.floatData.t.maxIF_kHz = this->data.floatData.t.oneMeterIF_kHz * this->data.floatData.t.dMax_m;
-        this->data.floatData.t.f32radarCube_kB = (float)this->data.intData.t.antTDM * (float)this->data.intData.t.rx * (float)this->data.intData.t.rangeFFTSize * (float)this->data.intData.t.dopplerFFTSize / 128.f;
+        this->data.floatData.t.f32radarCube_kB = (float) this->data.intData.t.antTDM * (float) this->data.intData.t.rx * (float) this->data.intData.t.rangeFFTSize * (float) this->data.intData.t.dopplerFFTSize / 128.f;
         this->computeErrorFlag = CP_ERR;
         if (this->data.floatData.t.dutyCycle_percent > 100) {
             this->errMsg = this->strErr[errDutyCycleGT100];
@@ -288,15 +263,17 @@ namespace chirpParameters {
             return;
         }
 
+        this->cfarHandler->cal();
+
         this->computeErrorFlag = CP_OK;
         this->errMsg = this->strErr[errNoErr];
     }
 
-    void ChirpParameterHandler::save_cfg(const std::string& saveFileName) {
+    void ChirpParameterHandler::saveCfg(const std::string &saveFileName) {
         if (saveFileName.empty()) {
             return;
         }
-        this->compute_and_validate();
+        this->computeAndValidate();
         if (this->computeErrorFlag == CP_ERR) {
             return;
         }
@@ -327,21 +304,13 @@ namespace chirpParameters {
         saveFile << STR_KEY_maxRangeFFTSize << " = " << this->data.intData.t.maxRangeFFTSize << "\n";
         saveFile << STR_KEY_maxDopplerFFTSize << " = " << this->data.intData.t.maxDopplerFFTSize << "\n";
         saveFile << STR_KEY_staticClutterRemoval << " = " << (this->data.boolData.t.staticClutterRemoval ? "yes" : "no") << "\n";
-        if (this->data.cfar.boolData.t.enabled) {
-            saveFile << "\n[" << STR_SEC_CFAR << "]\n";
-            saveFile << STR_KEY_rangeGuard << " = " << this->data.cfar.intData.t.rangeGuard << "\n";
-            saveFile << STR_KEY_rangeReference << " = " << this->data.cfar.intData.t.rangeReference << "\n";
-            saveFile << STR_KEY_rangeAlpha << " = " << precision_control(this->data.cfar.floatData.t.rangeAlpha, 2) << "\n";
-            saveFile << STR_KEY_rangeBias_dB << " = " << precision_control(this->data.cfar.floatData.t.rangeBias_dB, 2) << "\n";
-            saveFile << STR_KEY_dopplerGuard << " = " << this->data.cfar.intData.t.dopplerGuard << "\n";
-            saveFile << STR_KEY_dopplerReference << " = " << this->data.cfar.intData.t.dopplerReference << "\n";
-            saveFile << STR_KEY_dopplerAlpha << " = " << precision_control(this->data.cfar.floatData.t.dopplerAlpha, 2) << "\n";
-            saveFile << STR_KEY_dopplerBias_dB << " = " << precision_control(this->data.cfar.floatData.t.dopplerBias_dB, 2) << "\n";
+        if (this->cfarHandler->is_enabled()) {
+            this->cfarHandler->save(&saveFile);
         }
         saveFile.close();
     }
 
-    void ChirpParameterHandler::load_cfg(const std::string& loadFileName) {
+    void ChirpParameterHandler::loadCfg(const std::string &loadFileName) {
         if (loadFileName.empty()) {
             return;
         }
@@ -353,9 +322,12 @@ namespace chirpParameters {
         }
         std::string tempStr;
         // basic part
-        for (int i = 0;i < CFG_BASIC_LINES;i++) {
+        for (int i = 0; i < CFG_BASIC_LINES; i++) {
             tempStr = this->configParser.ReadString(STR_SEC_CHIRP, this->keyStringsBasic[i].c_str(), "");
-            if (tempStr.empty()) {this->errMsg = this->strErr[errFileReadErr]; return;}
+            if (tempStr.empty()) {
+                this->errMsg = this->strErr[errFileReadErr];
+                return;
+            }
             switch (this->strRefTypeMap[this->keyStringsBasic[i]]) {
                 case typeInt:
                     this->data.intData.v[this->strRefIdxMap[this->keyStringsBasic[i]]] = std::stoi(tempStr);
@@ -374,29 +346,18 @@ namespace chirpParameters {
         if (this->slopePriority == spSlopeFirst) {
             this->data.floatData.t.slope_MHzus = this->data.floatData.t.bandWidth_MHz / this->data.floatData.t.rampTime_us;
         }
-        // cfar part
-        tempStr = this->configParser.ReadString(STR_SEC_CFAR, STR_KEY_rangeGuard, "");
-        if (!tempStr.empty()) {
-            for (int i = 0;i < CFG_CFAR_LINES;i++) {
-                tempStr = this->configParser.ReadString(STR_SEC_CFAR, this->keyStringsCfar[i].c_str(), "");
-                if (tempStr.empty()) {this->errMsg = this->strErr[errFileReadErr]; return;}
-                switch (this->strRefTypeMap[this->keyStringsCfar[i]]) {
-                    case typeInt:
-                        this->data.cfar.intData.v[this->strRefIdxMap[this->keyStringsCfar[i]]] = std::stoi(tempStr);
-                        break;
-                    case typeFloat:
-                        this->data.cfar.floatData.v[this->strRefIdxMap[this->keyStringsCfar[i]]] = std::stof(tempStr);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            this->data.cfar.boolData.t.enabled = true;
+        // cfar
+        this->cfarHandler->load(&this->configParser, &tempStr);
+        if (this->cfarHandler->errFlag == CP_ERR) {
+            this->errMsg = this->strErr[errFileReadErr];
+            return;
         }
-        this->compute_and_validate();
+        this->computeAndValidate();
         this->loadErrorFlag = CP_OK;
     }
 
-    ChirpParameterHandler::~ChirpParameterHandler() = default;
+    ChirpParameterHandler::~ChirpParameterHandler() {
+        delete this->cfarHandler;
+    };
 
 } // chirpParameters

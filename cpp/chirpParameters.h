@@ -5,16 +5,14 @@
 #include <string>
 #include <unordered_map>
 
+#include "cfar.h"
 #include "config.h"
+#include "common.h"
 #include "language.h"
 
 namespace chirpParameters {
 
-#define CP_ERR false
-#define CP_OK true
-
 #define STR_SEC_CHIRP "chirp parameters"
-#define STR_SEC_CFAR "cfar parameters"
 
 #define STR_KEY_startFrequency_MHz "startFrequency_MHz"
 #define STR_KEY_bandWidth_MHz "bandWidth_MHz"
@@ -41,86 +39,10 @@ namespace chirpParameters {
 #define STR_KEY_staticClutterRemoval "staticClutterRemoval"
 #define CFG_BASIC_LINES (23U)
 
-#define STR_KEY_rangeGuard "cfarRangeGuard"
-#define STR_KEY_rangeReference "cfarRangeReference"
-#define STR_KEY_rangeAlpha "cfarRangeAlpha"
-#define STR_KEY_rangeBias_dB "cfarRangeBias_dB"
-#define STR_KEY_dopplerGuard "cfarDopplerGuard"
-#define STR_KEY_dopplerReference "cfarDopplerReference"
-#define STR_KEY_dopplerAlpha "cfarDopplerAlpha"
-#define STR_KEY_dopplerBias_dB "cfarDopplerBias_dB"
-#define CFG_CFAR_LINES (8U)
-
-    enum dataType_e {
-        typeInt = 0,
-        typeFloat,
-        typeBool
-    };
-
     enum slopePriority_e {
         spSlopeFirst = 0,
         spBandwidthFirst,
     };
-
-    enum CfarParameterDataInt_e {
-        rangeGuardIdx = 0,
-        rangeReferenceIdx,
-        dopplerGuardIdx,
-        dopplerReferenceIdx,
-        CfarParameterDataIntCount
-    };
-
-    typedef struct {
-        int rangeGuard;
-        int rangeReference;
-        int dopplerGuard;
-        int dopplerReference;
-    } CfarParameterDataInt_t;
-
-    union CfarParameterDataInt_u {
-        int v[CfarParameterDataIntCount];
-        CfarParameterDataInt_t t;
-    };
-
-    enum CfarParameterDataFloat_e {
-        rangeAlphaIdx = 0,
-        rangeBias_dBIdx,
-        dopplerAlphaIdx,
-        dopplerBias_dBIdx,
-        CfarParameterDataFloatCount
-    };
-
-    typedef struct {
-        float rangeAlpha;
-        float rangeBias_dB;
-        float dopplerAlpha;
-        float dopplerBias_dB;
-    } CfarParameterDataFloat_t;
-
-    union CfarParameterDataFloat_u {
-        float v[CfarParameterDataFloatCount];
-        CfarParameterDataFloat_t t;
-    };
-
-    enum CfarParameterDataBool_e {
-        enabledIdx = 0,
-        CfarParameterDataBoolCount
-    };
-
-    typedef struct {
-        bool enabled;
-    } CfarParameterDataBool_t;
-
-    union CfarParameterDataBool_u {
-        bool v[CfarParameterDataBoolCount];
-        CfarParameterDataBool_t t;
-    };
-
-    typedef struct {
-        CfarParameterDataInt_u intData;
-        CfarParameterDataFloat_u floatData;
-        CfarParameterDataBool_u boolData;
-    } CfarParameterData_t;
 
     enum ChirpParameterDataInt_e {
         ADCPointsIdx = 0,
@@ -248,7 +170,6 @@ namespace chirpParameters {
     };
 
     typedef struct {
-        CfarParameterData_t cfar;
         ChirpParameterDataInt_u intData;
         ChirpParameterDataFloat_u floatData;
         ChirpParameterDataBool_u boolData;
@@ -262,26 +183,26 @@ namespace chirpParameters {
         ChirpParameterData_t data{};
         std::string errMsg;
         std::vector<std::string> keyStringsBasic;
-        std::vector<std::string> keyStringsCfar;
-        std::unordered_map <std::string, int > strRefTypeMap;
-        std::unordered_map <std::string, int > strRefIdxMap;
+        std::unordered_map<std::string, int> strRefTypeMap;
+        std::unordered_map<std::string, int> strRefIdxMap;
         config::RrConfig configParser;
 
         bool computeErrorFlag;
         bool loadErrorFlag;
         slopePriority_e slopePriority;
+        CFAR *cfarHandler;
 
         ChirpParameterHandler();
 
-        void set_language(languageType_e flag);
+        void setLanguage(languageType_e flag);
 
-        void set_default();
+        void setDefault();
 
-        void compute_and_validate();
+        void computeAndValidate();
 
-        void save_cfg(const std::string& saveFileName);
+        void saveCfg(const std::string &saveFileName);
 
-        void load_cfg(const std::string& loadFileName);
+        void loadCfg(const std::string &loadFileName);
 
         ~ChirpParameterHandler();
     };
