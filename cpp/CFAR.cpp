@@ -175,6 +175,10 @@ void CFAR::load(config::RrConfig *cfg, std::string *text) {
                 }
             }
         }
+    } else {  // no section, In order to be compatible with older versions
+        for (int i = 0; i < cfarDimTotalNums; i++) {
+            this->data[i].b.t.enabled = false;
+        }
     }
     this->errFlag = CP_OK;
 }
