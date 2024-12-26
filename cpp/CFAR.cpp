@@ -75,7 +75,7 @@ CFAR::CFAR() {
     this->strRefIdxMap[STR_KEY_cfarParamAlpha] = alphaIdx;
     this->strRefIdxMap[STR_KEY_cfarParamBias] = biasIdx;
 
-    this->defaultCfarValue.b.t.enabled = true;
+    this->defaultCfarValue.b.t.enabled = false;
     this->defaultCfarValue.i.t.dim = dimRange;
     this->defaultCfarValue.i.t.type = CFAR_CA;
     this->defaultCfarValue.i.t.guard = 2;
