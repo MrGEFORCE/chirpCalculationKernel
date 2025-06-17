@@ -18,7 +18,7 @@ static float comb_number(int n, int r) {
 }
 
 void from_rate_to_alpha_ca(basicCfarData_t *config) {
-    config->f.t.alpha = (float) config->i.t.ref * (powf(config->falseAlarmRate, -1.f / (float) config->i.t.ref) - 1.f);
+    config->f.t.alpha = (float) config->N * (powf(config->falseAlarmRate, -1.f / (float) config->N) - 1.f);
 }
 
 void false_alarm_rate_ca(basicCfarData_t *config) {
